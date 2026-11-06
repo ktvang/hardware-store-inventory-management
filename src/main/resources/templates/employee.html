@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Inventory | HardwareHub</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/employee}">
+        <span class="brand-mark">H</span>
+        <span>Hardware<span class="brand-light">Hub</span></span>
+    </a>
+    <nav class="topnav">
+        <a class="nav-link active" th:href="@{/employee}">Employee System</a>
+        <a class="nav-link" th:href="@{/}">Customer Portal</a>
+        <a class="nav-link" th:href="@{/admin}">Admin</a>
+    </nav>
+    <form th:action="@{/logout}" method="post">
+        <button class="text-btn" type="submit">Sign out</button>
+    </form>
+</header>
+
+<main>
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">EMPLOYEE WORKSPACE</p>
+            <h1>Inventory management</h1>
+            <p class="muted">Add, search, update, and remove inventory across store locations.</p>
+        </div>
+        <form method="get" th:action="@{/employee}">
+            <label class="store-picker">Current store
+                <select name="storeId" onchange="this.form.submit()">
+                    <option th:each="store : ${stores}"
+                            th:value="${store.storeId}"
+                            th:text="${store.displayName}"
+                            th:selected="${store.storeId == selectedStoreId}"></option>
+                </select>
+            </label>
+        </form>
+    </div>
+
+    <p class="alert success" th:if="${success}" th:text="${success}"></p>
+    <p class="alert error" th:if="${error}" th:text="${error}"></p>
+
+    <section class="stats-grid">
+        <article class="stat-card"><span class="stat-icon purple">▦</span><div><p>Products listed</p><strong th:text="${inventory.size()}">0</strong><small>Selected store</small></div></article>
+        <article class="stat-card"><span class="stat-icon green">✓</span><div><p>In stock</p><strong th:text="${inStock}">0</strong><small>With available units</small></div></article>
+        <article class="stat-card"><span class="stat-icon orange">!</span><div><p>Low / out of stock</p><strong th:text="${lowStock}">0</strong><small>5 units or fewer</small></div></article>
+        <article class="stat-card"><span class="stat-icon blue">⌂</span><div><p>Store locations</p><strong th:text="${stores.size()}">3</strong><small>Multi-store system</small></div></article>
+    </section>
+
+    <div class="content-grid">
+        <section class="panel inventory-panel">
+            <div class="panel-heading">
+                <div><h2>Product catalog</h2><p class="muted">Current stock at the selected location.</p></div>
+            </div>
+            <form class="toolbar" method="get" th:action="@{/employee}">
+                <input type="hidden" name="storeId" th:value="${selectedStoreId}">
+                <div class="search-wrap">
+                    <span>⌕</span>
+                    <input type="search" name="search" th:value="${search}" placeholder="Search product name...">
+                </div>
+                <button class="primary-btn" type="submit">Search</button>
+            </form>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Product</th><th>SKU</th><th>Price</th><th>Quantity</th><th>Status</th><th>Edit product</th><th>Update stock</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    <tr th:each="item : ${inventory}">
+                        <td th:text="${item.product.name}">Product</td>
+                        <td class="sku" th:text="${item.product.sku}">SKU</td>
+                        <td th:text="'$' + ${#numbers.formatDecimal(item.product.price, 1, 2)}">$0.00</td>
+                        <td th:text="${item.quantity}">0</td>
+                        <td><span class="pill"
+                                  th:classappend="${item.quantity == 0} ? ' out' : (${item.quantity <= 5} ? ' low' : ' in')"
+                                  th:text="${item.stockStatus}">In stock</span></td>
+                        <td>
+                            <form class="edit-product-form" method="post"
+                                  th:action="@{/employee/products/{id}/update(id=${item.product.productId})}">
+                                <input type="hidden" name="storeId" th:value="${selectedStoreId}">
+                                <input type="text" name="name" th:value="${item.product.name}" required>
+                                <input type="text" name="sku" th:value="${item.product.sku}" maxlength="12" required>
+                                <input type="number" name="price" min="0.01" step="0.01"
+                                       th:value="${item.product.price}" required>
+                                <button class="small-btn" type="submit">Save details</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form class="inline-form" method="post"
+                                  th:action="@{/employee/inventory/{id}/quantity(id=${item.inventoryId})}">
+                                <input type="hidden" name="storeId" th:value="${selectedStoreId}">
+                                <input type="number" name="quantity" min="0" th:value="${item.quantity}" required>
+                                <button class="small-btn" type="submit">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="action-stack">
+                                <form method="post" th:action="@{/employee/sales}">
+                                    <input type="hidden" name="storeId" th:value="${selectedStoreId}">
+                                    <input type="hidden" name="inventoryId" th:value="${item.inventoryId}">
+                                    <input type="number" name="quantitySold" min="1" value="1" required>
+                                    <button class="small-btn" type="submit">Record sale</button>
+                                </form>
+                                <form method="post"
+                                      th:action="@{/employee/inventory/{id}/remove(id=${item.inventoryId})}">
+                                    <input type="hidden" name="storeId" th:value="${selectedStoreId}">
+                                    <button class="small-btn danger-btn" type="submit">Remove</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="muted" th:if="${#lists.isEmpty(inventory)}">No inventory items found for this store.</p>
+            </div>
+        </section>
+
+        <aside class="panel">
+            <h2>Add product</h2>
+            <p class="muted">Create a catalog item and its starting stock record.</p>
+            <form class="stack-form" method="post" th:action="@{/employee/products}">
+                <label>Product name<input name="name" maxlength="100" required></label>
+                <label>SKU<input name="sku" maxlength="12" required></label>
+                <label>Price ($)<input name="price" type="number" min="0.01" step="0.01" required></label>
+                <label>Starting quantity<input name="quantity" type="number" min="0" required></label>
+                <label>Store
+                    <select name="storeId">
+                        <option th:each="store : ${stores}" th:value="${store.storeId}"
+                                th:text="${store.displayName}" th:selected="${store.storeId == selectedStoreId}"></option>
+                    </select>
+                </label>
+                <button class="primary-btn full-btn" type="submit">Add product</button>
+            </form>
+        </aside>
+    </div>
+
+    <div class="content-grid lower-grid">
+        <section class="panel">
+            <h2>Incoming shipments</h2>
+            <p class="muted">Track delivery dates and receive stock into inventory.</p>
+            <form class="form-grid" method="post" th:action="@{/employee/shipments}">
+                <input type="hidden" name="storeId" th:value="${selectedStoreId}">
+                <label>Product
+                    <select name="productId">
+                        <option th:each="product : ${products}" th:value="${product.productId}"
+                                th:text="${product.name} + ' (' + ${product.sku} + ')'"></option>
+                    </select>
+                </label>
+                <label>Quantity<input type="number" name="quantity" min="1" required></label>
+                <label>Expected arrival<input type="date" name="arrivalDate" required></label>
+                <button class="primary-btn" type="submit">Add shipment</button>
+            </form>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Product</th><th>Quantity</th><th>Arrival date</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                    <tr th:each="shipment : ${shipments}">
+                        <td th:text="${shipment.product.name}">Product</td>
+                        <td th:text="${shipment.quantity}">0</td>
+                        <td th:text="${shipment.arrivalDate}">Date</td>
+                        <td th:text="${shipment.status}">Expected</td>
+                        <td>
+                            <form th:if="${shipment.status == 'Expected'}" method="post"
+                                  th:action="@{/employee/shipments/{id}/receive(id=${shipment.shipmentId})}">
+                                <input type="hidden" name="storeId" th:value="${selectedStoreId}">
+                                <button class="small-btn" type="submit">Mark received</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="panel">
+            <p class="eyebrow">SYSTEM WORKFLOW</p>
+            <h2>Employee responsibilities</h2>
+            <ul class="feature-list">
+                <li>Add, update, remove, and search products.</li>
+                <li>Track stock quantities for each store.</li>
+                <li>Record sales and deduct sold quantities.</li>
+                <li>Record incoming shipments and expected arrival dates.</li>
+                <li>Receive shipments to increase available inventory.</li>
+            </ul>
+        </section>
+    </div>
+    <footer class="customer-footer">HardwareHub · Employee inventory workspace</footer>
+</main>
+</body>
+</html>

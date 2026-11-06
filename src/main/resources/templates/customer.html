@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HardwareHub | Customer Portal</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/}">
+        <span class="brand-mark">H</span>
+        <span>Hardware<span class="brand-light">Hub</span></span>
+    </a>
+    <nav class="topnav">
+        <a class="nav-link active" th:href="@{/}">Customer Portal</a>
+        <a class="nav-link" th:href="@{/login}">Employee Login</a>
+    </nav>
+    <span class="topbar-right">Multi-store inventory</span>
+</header>
+
+<main>
+    <section class="customer-hero">
+        <div class="hero-copy">
+            <p class="eyebrow">HARDWAREHUB CUSTOMER PORTAL</p>
+            <h1>Find what you need<br>for your next project.</h1>
+            <p>Search products, check store availability, and view expected arrivals.</p>
+            <form class="hero-search" method="get" th:action="@{/}">
+                <span>⌕</span>
+                <input type="search" name="search" th:value="${search}"
+                       placeholder="Search by product name...">
+                <input type="hidden" name="storeId" th:value="${selectedStoreId}">
+                <button class="primary-btn" type="submit">Search</button>
+            </form>
+        </div>
+        <div class="hero-art">
+            <div class="art-circle"></div>
+            <div class="tool-card tool-one">🔨<span>Tools</span></div>
+            <div class="tool-card tool-two">🪚<span>Workshop</span></div>
+            <div class="tool-card tool-three">🧰<span>Supplies</span></div>
+        </div>
+    </section>
+
+    <div class="customer-toolbar">
+        <div>
+            <p class="eyebrow">SHOP LOCAL</p>
+            <h2>Product availability</h2>
+        </div>
+        <form method="get" th:action="@{/}">
+            <label class="store-picker">Select your store
+                <select name="storeId" onchange="this.form.submit()">
+                    <option th:each="store : ${stores}"
+                            th:value="${store.storeId}"
+                            th:text="${store.displayName}"
+                            th:selected="${store.storeId == selectedStoreId}">
+                    </option>
+                </select>
+                <input type="hidden" name="search" th:value="${search}">
+            </label>
+        </form>
+    </div>
+
+    <section class="customer-grid">
+        <article class="customer-card" th:each="item : ${inventory}">
+            <div class="customer-product-art">🧰</div>
+            <h3 th:text="${item.product.name}">Product name</h3>
+            <p class="sku" th:text="'SKU: ' + ${item.product.sku}">SKU</p>
+            <div class="customer-card-bottom">
+                <strong class="customer-price"
+                        th:text="'$' + ${#numbers.formatDecimal(item.product.price, 1, 2)}">$0.00</strong>
+                <span class="pill"
+                      th:classappend="${item.quantity == 0} ? ' out' : (${item.quantity <= 5} ? ' low' : ' in')"
+                      th:text="${item.stockStatus}">In stock</span>
+            </div>
+            <p class="muted" th:text="'Available quantity: ' + ${item.quantity}">Available quantity</p>
+        </article>
+    </section>
+
+    <p class="empty-state" th:if="${#lists.isEmpty(inventory)}">
+        No matching products were found at this store.
+    </p>
+
+    <section class="panel shipment-panel">
+        <p class="eyebrow">UPCOMING INVENTORY</p>
+        <h2>Expected product arrivals</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Product</th><th>Expected arrival</th><th>Status</th></tr></thead>
+                <tbody>
+                <tr th:each="shipment : ${shipments}">
+                    <td th:text="${shipment.product.name}">Product</td>
+                    <td th:text="${shipment.arrivalDate}">Date</td>
+                    <td><span class="pill low" th:text="${shipment.status}">Expected</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="muted" th:if="${#lists.isEmpty(shipments)}">There are no expected shipments listed for this store.</p>
+    </section>
+    <footer class="customer-footer">HardwareHub · Making every project easier</footer>
+</main>
+</body>
+</html>

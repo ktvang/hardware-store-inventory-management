@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Login | HardwareHub</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/}">
+        <span class="brand-mark">H</span>
+        <span>Hardware<span class="brand-light">Hub</span></span>
+    </a>
+    <a class="nav-link" th:href="@{/}">Customer Portal</a>
+</header>
+<main class="login-main">
+    <section class="panel login-panel">
+        <p class="eyebrow">EMPLOYEE ACCESS</p>
+        <h1>Sign in to HardwareHub</h1>
+        <p class="muted">Employees and administrators can manage store operations here.</p>
+
+        <p class="alert error" th:if="${param.error}">Username or password was incorrect.</p>
+        <p class="alert success" th:if="${param.logout}">You have signed out.</p>
+
+        <form method="post" th:action="@{/login}" class="stack-form">
+            <label>Username
+                <input type="text" name="username" required autocomplete="username">
+            </label>
+            <label>Password
+                <input type="password" name="password" required autocomplete="current-password">
+            </label>
+            <button class="primary-btn full-btn" type="submit">Sign in</button>
+        </form>
+
+        <div class="demo-credentials">
+            <strong>Class prototype accounts</strong>
+            <p>Employee: <code>employee</code> / <code>employee123</code></p>
+            <p>Administrator: <code>admin</code> / <code>admin123</code></p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

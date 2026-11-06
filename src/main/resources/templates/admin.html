@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Administration | HardwareHub</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/admin}">
+        <span class="brand-mark">H</span>
+        <span>Hardware<span class="brand-light">Hub</span></span>
+    </a>
+    <nav class="topnav">
+        <a class="nav-link" th:href="@{/employee}">Employee System</a>
+        <a class="nav-link active" th:href="@{/admin}">Administration</a>
+        <a class="nav-link" th:href="@{/}">Customer Portal</a>
+    </nav>
+    <form th:action="@{/logout}" method="post"><button class="text-btn" type="submit">Sign out</button></form>
+</header>
+<main>
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">SYSTEM ADMINISTRATION</p>
+            <h1>System overview</h1>
+            <p class="muted">Review multi-store data, sales activity, and expected shipments.</p>
+        </div>
+    </div>
+
+    <p class="alert success" th:if="${success}" th:text="${success}"></p>
+    <p class="alert error" th:if="${error}" th:text="${error}"></p>
+
+    <section class="stats-grid">
+        <article class="stat-card"><span class="stat-icon purple">▦</span><div><p>Product records</p><strong th:text="${productCount}">0</strong><small>Central catalog</small></div></article>
+        <article class="stat-card"><span class="stat-icon green">⌂</span><div><p>Inventory records</p><strong th:text="${inventoryCount}">0</strong><small>Product/store combinations</small></div></article>
+        <article class="stat-card"><span class="stat-icon blue">🏬</span><div><p>Store locations</p><strong th:text="${stores.size()}">0</strong><small>Connected locations</small></div></article>
+        <article class="stat-card"><span class="stat-icon orange">📦</span><div><p>Expected shipments</p><strong th:text="${shipments.size()}">0</strong><small>Awaiting arrival</small></div></article>
+    </section>
+
+    <div class="content-grid">
+        <section class="panel">
+            <h2>Store locations</h2>
+            <p class="muted">Locations configured in the shared inventory database.</p>
+            <table>
+                <thead><tr><th>Store ID</th><th>City</th><th>State</th></tr></thead>
+                <tbody>
+                <tr th:each="store : ${stores}">
+                    <td th:text="${store.storeId}">1</td>
+                    <td th:text="${store.city}">City</td>
+                    <td th:text="${store.state}">MN</td>
+                </tr>
+                </tbody>
+            </table>
+            <form class="form-grid" method="post" th:action="@{/admin/stores}">
+                <label>City<input type="text" name="city" required></label>
+                <label>State<input type="text" name="state" maxlength="2" required placeholder="MN"></label>
+                <button class="primary-btn" type="submit">Add store</button>
+            </form>
+        </section>
+        <section class="panel">
+            <h2>Expected shipments</h2>
+            <p class="muted">Upcoming deliveries across all stores.</p>
+            <table>
+                <thead><tr><th>Product</th><th>Store</th><th>Arrival</th></tr></thead>
+                <tbody>
+                <tr th:each="shipment : ${shipments}">
+                    <td th:text="${shipment.product.name}">Product</td>
+                    <td th:text="${shipment.store.displayName}">Store</td>
+                    <td th:text="${shipment.arrivalDate}">Date</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <section class="panel section-gap">
+        <h2>Recent sales</h2>
+        <p class="muted">Latest recorded point-of-sale inventory deductions.</p>
+        <table>
+            <thead><tr><th>Sale ID</th><th>Store</th><th>Date</th><th>Total</th></tr></thead>
+            <tbody>
+            <tr th:each="sale : ${sales}">
+                <td th:text="${sale.saleId}">1</td>
+                <td th:text="${sale.store.displayName}">Store</td>
+                <td th:text="${sale.dateOfSale}">Date</td>
+                <td th:text="'$' + ${#numbers.formatDecimal(sale.total, 1, 2)}">$0.00</td>
+            </tr>
+            </tbody>
+        </table>
+        <p class="muted" th:if="${#lists.isEmpty(sales)}">No sales have been recorded yet.</p>
+    </section>
+
+    <section class="panel section-gap">
+        <h2>Access and administration</h2>
+        <p class="muted">
+            The prototype separates public customer browsing, employee inventory operations,
+            and administrator access. Demo accounts are currently stored in application
+            configuration; a production deployment should use database-backed user accounts,
+            password management, and configurable permissions.
+        </p>
+    </section>
+</main>
+</body>
+</html>
